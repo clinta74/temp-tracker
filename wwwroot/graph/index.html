@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"
+        integrity="sha256-TQq84xX6vkwR0Qs1qH5ADkP+MvH0W+9E7TdHJsoIQiM=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div style="width: 400px;">
+        <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+    <script>
+        async function renderGraph() {
+            try {
+                const response = await fetch('/api/readings/data');
+                const readings = await response.json();
+
+                const values = readings.map(r => ({
+                    t: r.taken,
+                    y: r.value
+                }));
+
+                let ctx = document.getElementById('myChart').getContext('2d');
+                let myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                'rgba(10, 99, 255, 0.2)',
+                            ],
+                            borderColor: [
+                                'rgba(10, 99, 255, 1)',
+                            ],
+                        }],
+                    },
+                    options: {
+                        legend: {
+                            display: false,
+                        },
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                time: {
+                                    unit: 'day'
+                                }
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    suggestedMin: 80,
+                                    suggestedMax: 108,
+                                }
+                            }]
+                        }
+                    },
+                });
+            }
+            catch (error) {
+
+            }
+        }
+        renderGraph();
+    </script>
+</body>
+
+</html>
