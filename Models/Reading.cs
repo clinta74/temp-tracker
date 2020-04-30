@@ -13,9 +13,11 @@ namespace temp_tracker.Models
         public DateTime Taken { get; set; }
     }
 
-    public class ReadingRequest : Reading
+    public class ReadingRequest
     {
-        new public DateTime? Taken { get; set; }
+        public decimal Value { get; set; }
+        public int Scale { get; set; }
+        public DateTime? Taken { get; set; }
     }
 
     public enum Scales { F, C }

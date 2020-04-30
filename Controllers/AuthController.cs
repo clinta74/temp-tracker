@@ -34,7 +34,7 @@ namespace temp_tracker.Controllers
             var user = await _context
                 .Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Username.ToLower() == u.Username.ToLower());
+                .FirstOrDefaultAsync(u => u.Username.ToLower() == request.Username.ToLower());
 
             if (user != null)
             {

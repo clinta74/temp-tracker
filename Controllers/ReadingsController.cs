@@ -113,7 +113,7 @@ namespace temp_tracker.Controllers
         [HttpGet]
         [AllowAnonymous]
         [Route("data")]
-        public async Task<ActionResult<IEnumerable<DataResponse>>> Data(DateTime? start, DateTime? end)
+        public async Task<ActionResult<IEnumerable<ReadingGraphData>>> Data(DateTime? start, DateTime? end)
         {
             var data = await _context
                 .Readings
@@ -121,16 +121,10 @@ namespace temp_tracker.Controllers
                 .Where(r => r.Taken >= (start ?? DateTime.Today.AddDays(-7)))
                 .Where(p => p.Taken <= (end ?? DateTime.Now))
                 .GroupBy(p => p.Taken.Date)
-                .Select(g => new DataResponse { Value = g.Average(p => p.Value), Taken = g.Key })
+                .Select(g => new ReadingGraphData { Value = g.Average(p => p.Value), Taken = g.Key })
                 .ToListAsync();
 
             return data;
-        }
-
-        public class DataResponse
-        {
-            public decimal Value { get; set; }
-            public DateTime Taken { get; set; }
         }
     }
 }

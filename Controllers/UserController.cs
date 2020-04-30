@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using temp_tracker.Services;
 
 namespace temp_tracker.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UserController
@@ -29,7 +31,7 @@ namespace temp_tracker.Controllers
             var user = await _context
                 .Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Username.ToLower() == u.Username.ToLower());
+                .FirstOrDefaultAsync(u => u.Username.ToLower() == request.Username.ToLower());
 
             if (user != null)
             {
@@ -50,14 +52,13 @@ namespace temp_tracker.Controllers
             return result.Entity.UserID;
         }
 
-        [HttpPut("password/{id}")]
+        [HttpPut("{id}/password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<int>> Password(int id, [FromBody]string password)
+        public async Task<ActionResult<int>> Password(int id, [FromBody]UserRequest request)
         {
             var user = await _context
                 .Users
-                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserID == id);
 
             if (user == null)
@@ -66,19 +67,13 @@ namespace temp_tracker.Controllers
             }
 
             var salt = SaltGenerator.MakeSalty();
-            var hash = await HashService.HashPassword(password, salt);
+            var hash = await HashService.HashPassword(request.Password, salt);
 
             user.Password = hash;
             user.Salt = salt;
 
             await _context.SaveChangesAsync();
             return new OkResult();
-        }
-
-        public class UserRequest
-        {
-            public string Username { get; set; }
-            public string Password { get; set; }
         }
     }
 }
