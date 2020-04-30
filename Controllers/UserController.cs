@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -47,6 +48,31 @@ namespace temp_tracker.Controllers
 
             await _context.SaveChangesAsync();
             return result.Entity.UserID;
+        }
+
+        [HttpPut("password/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<int>> Password(int id, [FromBody]string password)
+        {
+            var user = await _context
+                .Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserID == id);
+
+            if (user == null)
+            {
+                return new BadRequestResult();
+            }
+
+            var salt = SaltGenerator.MakeSalty();
+            var hash = await HashService.HashPassword(password, salt);
+
+            user.Password = hash;
+            user.Salt = salt;
+
+            await _context.SaveChangesAsync();
+            return new OkResult();
         }
 
         public class UserRequest

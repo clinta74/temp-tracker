@@ -20,20 +20,38 @@ namespace temp_tracker.Controllers
     {
         private readonly TempTrackerDbContext _context;
         private readonly ILogger<ReadingsController> _logger;
-        public ReadingsController(TempTrackerDbContext context, ILogger<ReadingsController> logger)
+        private readonly IHttpContextAccessor  _httpContext;
+        public ReadingsController(TempTrackerDbContext context, ILogger<ReadingsController> logger, IHttpContextAccessor httpContext)
         {
             this._context = context;
             this._logger = logger;
+            this._httpContext = httpContext;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Reading>>> Get()
+        public async Task<ActionResult<IEnumerable<Reading>>> Get(int? page, int? limit)
         {
-            return await _context
+
+            int count = await _context
                 .Readings
                 .AsNoTracking()
+                .CountAsync();
+            
+            int skip = Math.Max(((page ?? 1) - 1) * (limit ?? 0), 0);
+            int take = Math.Max((limit ?? count), 0);
+            
+            var readings = await _context
+                .Readings
+                .AsNoTracking()
+                .OrderBy(reading => reading.Taken)
+                .Skip(skip)
+                .Take(take)
                 .ToListAsync();
+
+            _httpContext.HttpContext.Response.Headers.Add("X-Total-Count", count.ToString());
+
+            return readings;
         }
 
         [HttpGet("{id}")]
@@ -44,7 +62,7 @@ namespace temp_tracker.Controllers
             var reading = await _context
                 .Readings
                 .AsNoTracking()
-                .FirstOrDefaultAsync(_reading => _reading.ReadingID == id);
+                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id);
 
             if (reading == null)
             {
@@ -56,19 +74,40 @@ namespace temp_tracker.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Guid>> Post([FromBody]Reading reading)
+        public async Task<ActionResult<Guid>> Post([FromBody]ReadingRequest reading)
         {
             var entity = await _context.Readings.AddAsync(new Reading
             {
                 Value = reading.Value,
                 Scale = reading.Scale,
-                ReadingID = Guid.NewGuid(),
-                Taken = DateTime.Now
+                ReadingId = Guid.NewGuid(),
+                Taken = reading.Taken ?? DateTime.Now
             });
 
             await _context.SaveChangesAsync();
 
-            return entity.Entity.ReadingID;
+            return entity.Entity.ReadingId;
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Reading>> DeleteByID(Guid id)
+        {
+            var reading = await _context
+                .Readings
+                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id);
+
+            if (reading == null)
+            {
+                return new NotFoundResult();
+            }
+
+            _context.Remove(reading);
+
+            await _context.SaveChangesAsync();
+
+            return new OkResult();
         }
 
         [HttpGet]

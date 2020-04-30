@@ -7,10 +7,15 @@ namespace temp_tracker.Models
     public class Reading
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid ReadingID { get; set; }
+        public Guid ReadingId { get; set; }
         public decimal Value { get; set; }
         public int Scale { get; set; }
         public DateTime Taken { get; set; }
+    }
+
+    public class ReadingRequest : Reading
+    {
+        new public DateTime? Taken { get; set; }
     }
 
     public enum Scales { F, C }
