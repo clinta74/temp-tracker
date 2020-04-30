@@ -59,9 +59,13 @@ namespace temp_tracker
 
             app.UseAuthorization();
 
-            app.UseCors(config => config.AllowAnyOrigin().AllowAnyMethod());
-
+            app.UseDefaultFiles();
             app.UseStaticFiles();
+
+            app.UseCors(config => config
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
 
             app.UseEndpoints(endpoints =>
             {
