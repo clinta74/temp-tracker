@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,12 +47,12 @@ namespace temp_tracker.Controllers
                     return new UserResponse
                     {
                         UserID = user.UserID,
-                        Token = GenerateJSONWebToken(user),
+                        Token = await GenerateJSONWebTokenAsync(user),
                     };
                 }
             }
 
-            return new EmptyResult();
+            return new ForbidResult();
 
         }
 
@@ -66,14 +68,24 @@ namespace temp_tracker.Controllers
             public string Password { get; set; }
         }
 
-        private string GenerateJSONWebToken(User user)
+        private async Task<string> GenerateJSONWebTokenAsync(User user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+
+            var roles = await _context.Roles
+                .AsNoTracking()
+                .Where(role => role.UserRoles.Any(ur => ur.UserId == user.UserID))
+                .ToListAsync();
+
+            var claims = new List<Claim>();
+            claims.Add(new Claim(JwtRegisteredClaimNames.Sub, user.Username));
+            claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+
+            foreach(var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.Name));
+            }
 
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],

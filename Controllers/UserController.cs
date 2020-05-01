@@ -55,25 +55,32 @@ namespace temp_tracker.Controllers
         [HttpPut("{id}/password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<int>> Password(int id, [FromBody]UserRequest request)
+        public async Task<ActionResult<int>> ChangePassword(int id, [FromBody]UserChangePasswordRequest request)
         {
             var user = await _context
                 .Users
                 .FirstOrDefaultAsync(u => u.UserID == id);
 
-            if (user == null)
+            if (user != null)
             {
-                return new BadRequestResult();
+                var hash = await HashService.HashPassword(request.Password, user.Salt);
+
+                if (hash == user.Password)
+                {
+                    var salt = SaltGenerator.MakeSalty();
+                    var newHash = await HashService.HashPassword(request.Password, salt);
+
+                    user.Password = newHash;
+                    user.Salt = salt;
+
+                    await _context.SaveChangesAsync();
+                    return new OkResult();
+                }
+
+                return new ForbidResult();
             }
 
-            var salt = SaltGenerator.MakeSalty();
-            var hash = await HashService.HashPassword(request.Password, salt);
-
-            user.Password = hash;
-            user.Salt = salt;
-
-            await _context.SaveChangesAsync();
-            return new OkResult();
+            return new BadRequestResult();
         }
     }
 }
