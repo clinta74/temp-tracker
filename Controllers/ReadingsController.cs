@@ -81,7 +81,7 @@ namespace temp_tracker.Controllers
                 Value = reading.Value,
                 Scale = reading.Scale,
                 ReadingId = Guid.NewGuid(),
-                Taken = reading.Taken ?? DateTime.Now
+                Taken = reading.Taken ?? DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
