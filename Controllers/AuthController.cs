@@ -46,7 +46,7 @@ namespace temp_tracker.Controllers
                 {
                     return new UserResponse
                     {
-                        UserID = user.UserID,
+                        UserId = user.UserId,
                         Token = await GenerateJSONWebTokenAsync(user),
                     };
                 }
@@ -56,26 +56,14 @@ namespace temp_tracker.Controllers
 
         }
 
-        public class UserResponse
-        {
-            public int UserID { get; set; }
-            public string Token { get; set; }
-        }
-
-        public class LoginRequest
-        {
-            public string Username { get; set; }
-            public string Password { get; set; }
-        }
-
         private async Task<string> GenerateJSONWebTokenAsync(User user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT_KEY"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var roles = await _context.Roles
                 .AsNoTracking()
-                .Where(role => role.UserRoles.Any(ur => ur.UserId == user.UserID))
+                .Where(role => role.UserRoles.Any(ur => ur.UserId == user.UserId))
                 .ToListAsync();
 
             var claims = new List<Claim>();

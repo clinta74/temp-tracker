@@ -26,6 +26,9 @@ namespace temp_tracker.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "test")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<int>> Post([FromBody]UserRequest request)
         {
             var user = await _context
@@ -49,21 +52,21 @@ namespace temp_tracker.Controllers
             });
 
             await _context.SaveChangesAsync();
-            return result.Entity.UserID;
+            return result.Entity.UserId;
         }
 
-        [HttpPut("{id}/password")]
+        [HttpPost("{id}/password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<int>> ChangePassword(int id, [FromBody]UserChangePasswordRequest request)
         {
             var user = await _context
                 .Users
-                .FirstOrDefaultAsync(u => u.UserID == id);
+                .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user != null)
             {
-                var hash = await HashService.HashPassword(request.Password, user.Salt);
+                var hash = await HashService.HashPassword(request.OldPassword, user.Salt);
 
                 if (hash == user.Password)
                 {
