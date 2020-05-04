@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using temp_tracker.Context;
 
 namespace temp_tracker.Migrations
 {
     [DbContext(typeof(TempTrackerDbContext))]
-    partial class TempTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200504155735_add-names")]
+    partial class addnames
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

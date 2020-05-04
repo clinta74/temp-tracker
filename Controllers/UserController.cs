@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using System.Security.Principal;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,14 +21,16 @@ namespace temp_tracker.Controllers
     {
         private readonly TempTrackerDbContext _context;
         private readonly ILogger<UserController> _logger;
-        public UserController(TempTrackerDbContext context, ILogger<UserController> logger)
+        private readonly ClaimsPrincipal _claimsPrincipal;
+        public UserController(TempTrackerDbContext context, ILogger<UserController> logger, IPrincipal principal)
         {
             this._context = context;
             this._logger = logger;
+            this._claimsPrincipal = principal as ClaimsPrincipal; 
         }
 
         [HttpPost]
-        [Authorize(Roles = "test")]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<int>> Post([FromBody]UserRequest request)
@@ -46,6 +50,8 @@ namespace temp_tracker.Controllers
             var result = _context.Users.Add(new User
             {
                 Username = request.Username,
+                Firstname = request.Firstname,
+                Lastname = request.Lastname,
                 Password = hash,
                 Salt = salt,
                 Created = DateTime.UtcNow,
@@ -53,6 +59,33 @@ namespace temp_tracker.Controllers
 
             await _context.SaveChangesAsync();
             return result.Entity.UserId;
+        }
+
+        [HttpPut("{UserId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<int>> Put(int UserId, [FromBody]UserUpdateRequest Request)
+        {
+            var user = await _context
+                .Users
+                .FirstOrDefaultAsync(u => u.UserId == UserId);
+
+            if (user != null)
+            {
+                if (_claimsPrincipal.SubjectId().Equals(user.Username, StringComparison.OrdinalIgnoreCase) || _claimsPrincipal.IsInRole("admin"))
+                {
+                    user.Firstname = Request.Firstname;
+                    user.Lastname = Request.Lastname;
+
+                    await _context.SaveChangesAsync();
+
+                    return new OkResult();
+                }
+                
+                return new ForbidResult();
+            }
+
+            return new BadRequestResult();
         }
 
         [HttpPost("{id}/password")]
@@ -85,5 +118,10 @@ namespace temp_tracker.Controllers
 
             return new BadRequestResult();
         }
+    }
+
+    public static class ClaimsExtenstion
+    {
+        public static string SubjectId(this ClaimsPrincipal user) { return user?.FindFirst(ClaimTypes.NameIdentifier)?.Value; }
     }
 }
