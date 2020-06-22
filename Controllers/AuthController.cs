@@ -46,7 +46,6 @@ namespace temp_tracker.Controllers
                 {
                     return new UserResponse
                     {
-                        UserId = user.UserId,
                         Token = await GenerateJSONWebTokenAsync(user),
                     };
                 }
@@ -74,6 +73,8 @@ namespace temp_tracker.Controllers
             {
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
+
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()));
 
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],
