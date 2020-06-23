@@ -12,6 +12,7 @@ using temp_tracker.Context;
 using temp_tracker.Models;
 using temp_tracker.Services;
 using System.Collections.Generic;
+using temp_tracker.Extensions;
 
 namespace temp_tracker.Controllers
 {
@@ -52,19 +53,15 @@ namespace temp_tracker.Controllers
                 .Include(user => user.UserRoles)
                 .AsNoTracking()
                 .CountAsync();
-
-            int skip = Math.Max(((page ?? 1) - 1) * (limit ?? 0), 0);
-            int take = Math.Max((limit ?? count), 0);
-
             var users = await _context
                 .Users
                 .AsNoTracking()
                 .Include(user => user.UserRoles)
                 .ThenInclude(ur => ur.Role)
                 .OrderBy(user => user.Lastname)
-                .Skip(skip)
-                .Take(take)
-                .Select(user => new UserResponse {
+                .Paged(count, page, limit)
+                .Select(user => new UserResponse
+                {
                     UserId = user.UserId,
                     Username = user.Username,
                     Firstname = user.Firstname,
@@ -108,6 +105,17 @@ namespace temp_tracker.Controllers
             });
 
             await _context.SaveChangesAsync();
+
+            var roles = await _context.Roles.Where(role => request.Roles.Contains(role.Name)).ToListAsync();
+
+            var userRoles = _context.UserRoles.AddRangeAsync(roles.Select(role => new UserRole
+                {  
+                    UserId = result.Entity.UserId,
+                    RoleId = role.RoleId,
+                }).ToArray());
+
+            await _context.SaveChangesAsync();
+
             return result.Entity.UserId;
         }
 
@@ -127,6 +135,23 @@ namespace temp_tracker.Controllers
                     user.Firstname = Request.Firstname;
                     user.Lastname = Request.Lastname;
 
+                    if (Request.Roles != null && _claimsPrincipal.IsInRole("admin"))
+                    {
+                        user.UserRoles.Clear();
+                        foreach (var roleName in Request.Roles)
+                        {
+                            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+                            if (role != null)
+                            {
+                                user.UserRoles.Add(new UserRole
+                                {
+                                    UserId = user.UserId,
+                                    RoleId = role.RoleId
+                                });
+                            }
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
 
                     return new OkResult();
@@ -140,6 +165,7 @@ namespace temp_tracker.Controllers
 
         [HttpPost("{id}/password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<int>> ChangePassword(int id, [FromBody] UserChangePasswordRequest request)
         {
@@ -164,6 +190,33 @@ namespace temp_tracker.Controllers
                 }
 
                 return new ForbidResult();
+            }
+
+            return new BadRequestResult();
+        }
+
+        [Authorize(Roles = "admin")]
+        [HttpPost("{id}/resetpassword")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<int>> ResetPassword(int id, [FromBody] UserResetPasswordRequest request)
+        {
+            var user = await _context
+                .Users
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user != null)
+            {
+
+                var salt = SaltGenerator.MakeSalty();
+                var newHash = await HashService.HashPassword(request.Password, salt);
+
+                user.Password = newHash;
+                user.Salt = salt;
+
+                await _context.SaveChangesAsync();
+                return new OkResult();
+
             }
 
             return new BadRequestResult();

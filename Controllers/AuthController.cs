@@ -74,7 +74,7 @@ namespace temp_tracker.Controllers
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
 
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()));
+            claims.Add(new Claim(JwtRegisteredClaimNames.NameId, user.UserId.ToString()));
 
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace temp_tracker.Models
@@ -12,5 +13,6 @@ namespace temp_tracker.Models
         public string Password { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
+        public IEnumerable<string> Roles { get; set; }
     }
 }
