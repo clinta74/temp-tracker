@@ -118,11 +118,13 @@ namespace temp_tracker.Controllers
             var data = await _context
                 .Readings
                 .AsNoTracking()
-                .Where(r => r.Taken >= (start ?? DateTime.Today.AddDays(-7)))
+                .Where(r => r.Taken >= (start ?? DateTime.Today.AddDays(-14)))
                 .Where(p => p.Taken <= (end ?? DateTime.Now))
                 .GroupBy(p => p.Taken.Date)
                 .Select(g => new ReadingGraphData { Value = g.Average(p => p.Value), Taken = g.Key })
                 .ToListAsync();
+
+            var f = data.Where(d => d.Taken.DayOfWeek < DayOfWeek.Friday).ToList();
 
             return data;
         }

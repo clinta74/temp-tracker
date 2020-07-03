@@ -7,8 +7,10 @@
 </head>
 
 <body>
-    <div style="width: 400px;">
-        <canvas id="myChart" width="400" height="400"></canvas>
+    <div style="display: flex; justify-content: center;">
+        <div style="display: inline;">
+            <canvas id="myChart" width="400" height="400"></canvas>
+        </div>
     </div>
     <script>
         async function renderGraph() {
@@ -48,8 +50,8 @@
                             }],
                             yAxes: [{
                                 ticks: {
-                                    suggestedMin: 92,
-                                    suggestedMax: 108,
+                                    suggestedMin: 96.5,
+                                    suggestedMax: 100,
                                 }
                             }]
                         }
