@@ -76,6 +76,42 @@ namespace temp_tracker.Controllers
             return users;
         }
 
+        [HttpGet("{UserId}")]
+        [Authorize(Roles = "admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<UserResponse>> GetUser(int UserId)
+        {
+            var user = await _context
+                .Users
+                .AsNoTracking()
+                .Include(user => user.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .Select(user => new UserResponse
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    Firstname = user.Firstname,
+                    Lastname = user.Lastname,
+                    Created = user.Created,
+                    Roles = user.UserRoles.Select(userRoles => userRoles.Role),
+                })
+                .FirstOrDefaultAsync(user => user.UserId == UserId);
+
+            if (user != null)
+            {
+                if (_claimsPrincipal.SubjectId().Equals(user.Username, StringComparison.OrdinalIgnoreCase) || _claimsPrincipal.IsInRole("admin"))
+                {
+                    return user;
+                }
+
+                return new ForbidResult();
+            }
+
+            return new NotFoundResult();
+        }
+
         [HttpPost]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -109,10 +145,10 @@ namespace temp_tracker.Controllers
             var roles = await _context.Roles.Where(role => request.Roles.Contains(role.Name)).ToListAsync();
 
             var userRoles = _context.UserRoles.AddRangeAsync(roles.Select(role => new UserRole
-                {  
-                    UserId = result.Entity.UserId,
-                    RoleId = role.RoleId,
-                }).ToArray());
+            {
+                UserId = result.Entity.UserId,
+                RoleId = role.RoleId,
+            }).ToArray());
 
             await _context.SaveChangesAsync();
 
@@ -221,6 +257,28 @@ namespace temp_tracker.Controllers
 
             return new BadRequestResult();
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> Remove(int id)
+        {
+            var user = await _context
+                .Users
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user != null)
+            {
+                _context.Remove(user);
+
+                await _context.SaveChangesAsync();
+                return new OkResult();
+            }
+
+            return new BadRequestResult();
+        }
+
     }
 
     public static class ClaimsExtenstion

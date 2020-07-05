@@ -59,7 +59,11 @@ namespace temp_tracker
             app.UseStaticFiles();
 
             app.UseCors(config => config
-                .WithOrigins(new string[] { "https://localhost:3000", "https://temptracker.pollyspeople.net" })
+                .WithOrigins(new string[] 
+                { 
+                    "http://localhost:3000", 
+                    "https://temptracker.pollyspeople.net" 
+                })
                 .AllowAnyMethod()
                 .AllowAnyHeader());
 
