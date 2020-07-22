@@ -39,7 +39,8 @@ namespace temp_tracker
                 IntegratedSecurity = false,
             };
 
-            services.AddDbContext<TempTrackerDbContext>(options => {
+            services.AddDbContext<TempTrackerDbContext>(options =>
+            {
                 options.UseSqlServer(builder.ConnectionString);
             }, ServiceLifetime.Transient);
 
@@ -51,21 +52,21 @@ namespace temp_tracker
         {
             app.UseRouting();
 
-            app.UseAuthentication();
-
-            app.UseAuthorization();
-
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
             app.UseCors(config => config
-                .WithOrigins(new string[] 
-                { 
-                    "http://localhost:3000", 
-                    "https://temptracker.pollyspeople.net" 
+                .WithOrigins(new string[]
+                {
+                    "http://localhost:3000",
+                    "https://temptracker.pollyspeople.net"
                 })
                 .AllowAnyMethod()
                 .AllowAnyHeader());
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
