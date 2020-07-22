@@ -9,10 +9,6 @@
 <body>
     <div style="display: flex; justify-content: center;">
         <div style="display: inline;">
-            <div style="text-align: center;">
-                Latest day's averge temperature:
-                <span id="reading"></span>
-            </div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
     </div>
@@ -26,11 +22,6 @@
                     t: r.taken,
                     y: r.value
                 }));
-
-                const lastValue = Math.round(values[values.length -1].y * 100) / 100;
-
-                const readingElement = document.getElementById('reading');
-                readingElement.innerHTML = `${lastValue}&deg;`; 
 
                 let ctx = document.getElementById('myChart').getContext('2d');
                 let myChart = new Chart(ctx, {
