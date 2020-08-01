@@ -15,7 +15,7 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: candrews74/temp-tracker
+  IMAGE_NAME: temp-tracker
 
 jobs:
   # Run tests.
