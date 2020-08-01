@@ -50,9 +50,9 @@ namespace temp_tracker.Controllers
         {
             int count = await _context
                 .Users
-                .Include(user => user.UserRoles)
                 .AsNoTracking()
                 .CountAsync();
+
             var users = await _context
                 .Users
                 .AsNoTracking()
@@ -71,7 +71,7 @@ namespace temp_tracker.Controllers
                 })
                 .ToListAsync();
 
-            _httpContext.HttpContext.Response.Headers.Add("X-Total-Count", count.ToString());
+            _httpContext.HttpContext.Response.Headers.Add("x-total-count", count.ToString());
 
             return users;
         }

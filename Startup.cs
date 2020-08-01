@@ -56,6 +56,7 @@ namespace temp_tracker
             app.UseStaticFiles();
 
             app.UseCors(config => config
+                .WithExposedHeaders("x-total-count")
                 .WithOrigins(new string[]
                 {
                     "http://localhost:3000",

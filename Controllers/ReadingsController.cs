@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using temp_tracker.Context;
 using temp_tracker.Models;
+using temp_tracker.Extensions;
 
 namespace temp_tracker.Controllers
 {
@@ -38,18 +39,14 @@ namespace temp_tracker.Controllers
                 .AsNoTracking()
                 .CountAsync();
             
-            int skip = Math.Max(((page ?? 1) - 1) * (limit ?? 0), 0);
-            int take = Math.Max((limit ?? count), 0);
-            
             var readings = await _context
                 .Readings
                 .AsNoTracking()
-                .OrderBy(reading => reading.Taken)
-                .Skip(skip)
-                .Take(take)
+                .OrderByDescending(reading => reading.Taken)
+                .Paged(count, page, limit)
                 .ToListAsync();
 
-            _httpContext.HttpContext.Response.Headers.Add("X-Total-Count", count.ToString());
+            _httpContext.HttpContext.Response.Headers.Add("x-total-count", count.ToString());
 
             return readings;
         }
