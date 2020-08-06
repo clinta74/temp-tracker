@@ -4,9 +4,14 @@ temperatures to a facility.
 
 ## Developement
 Add user secrets
-`
 ```
-dotnet run
+dotnet user-secrets set DB_USERNAME <db_username>
+dotnet user-secrets set DB_PASSWORD <db_password>
+dotnet user-secrets set JWT_KEY <jwt_key>
+```
+Run the application
+```
+dotnet watch run
 ```
 
 ### Environment
