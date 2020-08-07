@@ -60,6 +60,7 @@ namespace temp_tracker
                 .WithOrigins(new string[]
                 {
                     "http://localhost:3000",
+                    "http://localhost:4000",
                     "https://temptracker.pollyspeople.net"
                 })
                 .AllowAnyMethod()
