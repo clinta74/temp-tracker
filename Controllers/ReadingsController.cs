@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,7 +20,7 @@ namespace temp_tracker.Controllers
     {
         private readonly TempTrackerDbContext _context;
         private readonly ILogger<ReadingsController> _logger;
-        private readonly IHttpContextAccessor  _httpContext;
+        private readonly IHttpContextAccessor _httpContext;
         public ReadingsController(TempTrackerDbContext context, ILogger<ReadingsController> logger, IHttpContextAccessor httpContext)
         {
             this._context = context;
@@ -38,7 +37,7 @@ namespace temp_tracker.Controllers
                 .Readings
                 .AsNoTracking()
                 .CountAsync();
-            
+
             var readings = await _context
                 .Readings
                 .AsNoTracking()
@@ -71,7 +70,7 @@ namespace temp_tracker.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Guid>> Post([FromBody]ReadingRequest reading)
+        public async Task<ActionResult<Guid>> Post([FromBody] ReadingRequest reading)
         {
             var entity = await _context.Readings.AddAsync(new Reading
             {

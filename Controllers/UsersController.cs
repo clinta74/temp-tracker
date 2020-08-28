@@ -33,16 +33,6 @@ namespace temp_tracker.Controllers
             this._httpContext = httpContext;
         }
 
-        public class UserResponse
-        {
-            public int UserId { get; set; }
-            public string Username { get; set; }
-            public string Firstname { get; set; }
-            public string Lastname { get; set; }
-            public DateTime Created { get; set; }
-            public IEnumerable<Role> Roles { get; set; }
-        }
-
         [HttpGet]
         [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]

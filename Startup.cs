@@ -7,9 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Security.Principal;
 using System.Text;
 using temp_tracker.Context;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace temp_tracker
 {
@@ -44,6 +46,36 @@ namespace temp_tracker
                 options.UseSqlServer(builder.ConnectionString);
             }, ServiceLifetime.Transient);
 
+            services.AddSwaggerGen(config =>
+            {
+                config.SwaggerDoc("v1", new OpenApiInfo { Title = "Temp Tracker API", Version = "v1" });
+
+                config.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme."
+                });
+
+                config.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                          new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference 
+                                { 
+                                    Type = ReferenceType.SecurityScheme, 
+                                    Id = "Bearer" 
+                                }
+                            },
+                            new string[] {} 
+                    }
+                });
+            });
+
             ConfigureJwt(services);
         }
 
@@ -74,6 +106,17 @@ namespace temp_tracker
             {
                 endpoints.MapControllers();
             });
+
+            if (env.EnvironmentName == "Development")
+            {
+                app.UseSwagger();
+
+                app.UseSwaggerUI(config =>
+                {
+                    config.SwaggerEndpoint("/swagger/v1/swagger.json", "Temp Tracker API");
+                    config.DocExpansion(DocExpansion.None);
+                });
+            }
         }
 
         private void ConfigureJwt(IServiceCollection services)

@@ -31,7 +31,7 @@ namespace temp_tracker.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<UserResponse>> Login([FromBody]LoginRequest request)
+        public async Task<ActionResult<AuthResponse>> Login([FromBody]LoginRequest request)
         {
             var user = await _context
                 .Users
@@ -44,7 +44,7 @@ namespace temp_tracker.Controllers
 
                 if (hash == user.Password)
                 {
-                    return new UserResponse
+                    return new AuthResponse
                     {
                         Token = await GenerateJSONWebTokenAsync(user),
                     };
