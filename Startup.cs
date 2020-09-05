@@ -65,13 +65,13 @@ namespace temp_tracker
                     {
                           new OpenApiSecurityScheme
                             {
-                                Reference = new OpenApiReference 
-                                { 
-                                    Type = ReferenceType.SecurityScheme, 
-                                    Id = "Bearer" 
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
                                 }
                             },
-                            new string[] {} 
+                            new string[] {}
                     }
                 });
             });
@@ -82,6 +82,8 @@ namespace temp_tracker
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            UpdateDatabase(app);
+
             app.UseRouting();
 
             app.UseDefaultFiles();
@@ -107,10 +109,10 @@ namespace temp_tracker
                 endpoints.MapControllers();
             });
 
+            app.UseSwagger();
+
             if (env.EnvironmentName == "Development")
             {
-                app.UseSwagger();
-
                 app.UseSwaggerUI(config =>
                 {
                     config.SwaggerEndpoint("/swagger/v1/swagger.json", "Temp Tracker API");
@@ -137,6 +139,19 @@ namespace temp_tracker
                     });
 
             services.AddAuthorization();
+        }
+
+        private static void UpdateDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<TempTrackerDbContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
         }
     }
 }
