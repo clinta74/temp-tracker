@@ -8,8 +8,13 @@ namespace temp_tracker.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ReadingId { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+
         public decimal Value { get; set; }
+
         public int Scale { get; set; }
+
         public DateTime Taken { get; set; }
     }
 
