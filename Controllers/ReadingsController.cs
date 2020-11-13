@@ -10,12 +10,14 @@ using Microsoft.Extensions.Logging;
 using temp_tracker.Context;
 using temp_tracker.Models;
 using temp_tracker.Extensions;
+using System.Threading;
 
 namespace temp_tracker.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class ReadingsController
     {
         private readonly TempTrackerDbContext _context;
@@ -30,20 +32,20 @@ namespace temp_tracker.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Reading>>> Get(int? page, int? limit)
+        public async Task<ActionResult<IEnumerable<Reading>>> Get(int? page, int? limit, CancellationToken cancellationToken)
         {
 
             int count = await _context
                 .Readings
                 .AsNoTracking()
-                .CountAsync();
+                .CountAsync(cancellationToken);
 
             var readings = await _context
                 .Readings
                 .AsNoTracking()
                 .OrderByDescending(reading => reading.Taken)
                 .Paged(count, page, limit)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             _httpContext.HttpContext.Response.Headers.Add("x-total-count", count.ToString());
 
@@ -53,12 +55,12 @@ namespace temp_tracker.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Reading>> GetByID(Guid id)
+        public async Task<ActionResult<Reading>> GetByID(Guid id, CancellationToken cancellationToken)
         {
             var reading = await _context
                 .Readings
                 .AsNoTracking()
-                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id);
+                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id, cancellationToken);
 
             if (reading == null)
             {
@@ -70,7 +72,7 @@ namespace temp_tracker.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Guid>> Post([FromBody] ReadingRequest reading)
+        public async Task<ActionResult<Guid>> Post([FromBody] ReadingRequest reading, CancellationToken cancellationToken)
         {
             var entity = await _context.Readings.AddAsync(new Reading
             {
@@ -78,9 +80,9 @@ namespace temp_tracker.Controllers
                 Scale = reading.Scale,
                 ReadingId = Guid.NewGuid(),
                 Taken = reading.Taken ?? DateTime.UtcNow
-            });
+            }, cancellationToken);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return entity.Entity.ReadingId;
         }
@@ -88,11 +90,11 @@ namespace temp_tracker.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Reading>> DeleteByID(Guid id)
+        public async Task<ActionResult<Reading>> DeleteByID(Guid id, CancellationToken cancellationToken)
         {
             var reading = await _context
                 .Readings
-                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id);
+                .FirstOrDefaultAsync(_reading => _reading.ReadingId == id, cancellationToken);
 
             if (reading == null)
             {
@@ -101,7 +103,7 @@ namespace temp_tracker.Controllers
 
             _context.Remove(reading);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return new OkResult();
         }
@@ -109,8 +111,10 @@ namespace temp_tracker.Controllers
         [HttpGet]
         [AllowAnonymous]
         [Route("data")]
-        public async Task<ActionResult<IEnumerable<ReadingGraphData>>> Data(DateTime? start, DateTime? end)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ReadingGraphData>>> Data(DateTime? start, DateTime? end, CancellationToken cancellationToken)
         {
+            await Task.Delay(2000, cancellationToken);
             var data = await _context
                 .Readings
                 .AsNoTracking()
@@ -118,11 +122,11 @@ namespace temp_tracker.Controllers
                 .Where(p => p.Taken <= (end ?? DateTime.Now))
                 .GroupBy(p => p.Taken.Date)
                 .Select(g => new ReadingGraphData { Value = g.Average(p => p.Value), Taken = g.Key })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            var f = data.Where(d => d.Taken.DayOfWeek < DayOfWeek.Friday).ToList();
+            var filtered = data.Where(d => d.Taken.DayOfWeek < DayOfWeek.Friday).ToList();
 
-            return data;
+            return filtered;
         }
     }
 }

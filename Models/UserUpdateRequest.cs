@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace temp_tracker.Models
 {
-    public class UserUpdateRequest
+    public record UserUpdateRequest
     {
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
-        public IEnumerable<string> Roles { get; set; }
+        public string Firstname { get; init; }
+        public string Lastname { get; init; }
+        public IEnumerable<string> Roles { get; init; }
 
     }
 }

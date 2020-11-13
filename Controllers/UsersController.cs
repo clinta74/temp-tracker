@@ -19,6 +19,7 @@ namespace temp_tracker.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class UsersController
     {
         private readonly TempTrackerDbContext _context;
@@ -91,7 +92,9 @@ namespace temp_tracker.Controllers
 
             if (user != null)
             {
-                if (_claimsPrincipal.SubjectId().Equals(user.Username, StringComparison.OrdinalIgnoreCase) || _claimsPrincipal.IsInRole("admin"))
+                if (_claimsPrincipal
+                    .SubjectId()
+                    .Equals(user.Username, StringComparison.OrdinalIgnoreCase) || _claimsPrincipal.IsInRole("admin"))
                 {
                     return user;
                 }
@@ -152,32 +155,37 @@ namespace temp_tracker.Controllers
         {
             var user = await _context
                 .Users
+                .Include(ur => ur.UserRoles)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == UserId);
 
             if (user != null)
             {
                 if (_claimsPrincipal.SubjectId().Equals(user.Username, StringComparison.OrdinalIgnoreCase) || _claimsPrincipal.IsInRole("admin"))
                 {
-                    user.Firstname = Request.Firstname;
-                    user.Lastname = Request.Lastname;
+                    var newUser = user with 
+                    { 
+                        Firstname = Request.Firstname, 
+                        Lastname = Request.Lastname,
+                    };
+
+                    _context.Users.Update(newUser);
 
                     if (Request.Roles != null && _claimsPrincipal.IsInRole("admin"))
                     {
-                        user.UserRoles.Clear();
-                        foreach (var roleName in Request.Roles)
-                        {
-                            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
-                            if (role != null)
-                            {
-                                user.UserRoles.Add(new UserRole
+                        _context.UserRoles.RemoveRange(user.UserRoles);
+                        await _context.UserRoles.AddRangeAsync(
+                            _context
+                                .Roles
+                                .Where(role => Request.Roles.Contains(role.Name))
+                                .Select(role => new UserRole
                                 {
+                                    RoleId = role.RoleId,
                                     UserId = user.UserId,
-                                    RoleId = role.RoleId
-                                });
-                            }
-                        }
-                    }
+                                })
+                                .ToList());
 
+                    }
                     await _context.SaveChangesAsync();
 
                     return new OkResult();
@@ -197,6 +205,7 @@ namespace temp_tracker.Controllers
         {
             var user = await _context
                 .Users
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user != null)
@@ -208,10 +217,11 @@ namespace temp_tracker.Controllers
                     var salt = SaltGenerator.MakeSalty();
                     var newHash = await HashService.HashPassword(request.Password, salt);
 
-                    user.Password = newHash;
-                    user.Salt = salt;
+                    var newUser = user with { Password = newHash, Salt = salt };
 
+                    _context.Users.Update(newUser);
                     await _context.SaveChangesAsync();
+
                     return new OkResult();
                 }
 
@@ -229,6 +239,7 @@ namespace temp_tracker.Controllers
         {
             var user = await _context
                 .Users
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
             if (user != null)
@@ -237,10 +248,11 @@ namespace temp_tracker.Controllers
                 var salt = SaltGenerator.MakeSalty();
                 var newHash = await HashService.HashPassword(request.Password, salt);
 
-                user.Password = newHash;
-                user.Salt = salt;
+                var newUser = user with { Password = newHash, Salt = salt };
 
+                _context.Users.Update(newUser);
                 await _context.SaveChangesAsync();
+
                 return new OkResult();
 
             }

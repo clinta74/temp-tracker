@@ -14,6 +14,7 @@ namespace temp_tracker.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class RolesController
     {
         private readonly TempTrackerDbContext _context;

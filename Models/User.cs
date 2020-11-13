@@ -4,16 +4,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace temp_tracker.Models
 {
-    public class User
+    public record User
     {
         [Key]
-        public int UserId { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Firstname { get; set;}
-        public string Lastname { get; set; }
-        public byte[] Salt { get; set; }
-        public DateTime Created { get; set; }
-        public virtual ICollection<UserRole> UserRoles { get; set; }
+        public int UserId { get; init; }
+        public string Username { get; init; }
+        public string Password { get; init; }
+        public string Firstname { get; init;}
+        public string Lastname { get; init; }
+        public byte[] Salt { get; init; }
+        public DateTime Created { get; init; }
+        public virtual ICollection<UserRole> UserRoles { get; init; }
     }
 }

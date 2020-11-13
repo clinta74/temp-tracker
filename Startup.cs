@@ -12,6 +12,7 @@ using System.Security.Principal;
 using System.Text;
 using temp_tracker.Context;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using temp_tracker.Filters;
 
 namespace temp_tracker
 {
@@ -27,7 +28,10 @@ namespace temp_tracker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers(config => 
+            {
+                config.Filters.Add<OperationCancelledExceptionFilter>();
+            });
             services.AddHttpContextAccessor();
             services.AddTransient<IPrincipal>(provider => provider.GetService<IHttpContextAccessor>().HttpContext.User);
 

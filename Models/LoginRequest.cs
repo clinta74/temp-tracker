@@ -1,8 +1,8 @@
 namespace temp_tracker.Models
 {
-    public class LoginRequest
+    public record LoginRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Username { get; init; }
+        public string Password { get; init; }
     }
 }

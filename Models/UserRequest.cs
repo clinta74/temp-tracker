@@ -3,16 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace temp_tracker.Models
 {
-    public class UserRequest
+    public record UserRequest
     {
         [Required]
-        public string Username { get; set; }
+        public string Username { get; init; }
         
         [Required]
         [MinLength(8)]
-        public string Password { get; set; }
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
-        public IEnumerable<string> Roles { get; set; }
+        public string Password { get; init; }
+        public string Firstname { get; init; }
+        public string Lastname { get; init; }
+        public IEnumerable<string> Roles { get; init; }
     }
 }

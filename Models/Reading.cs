@@ -4,25 +4,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace temp_tracker.Models
 {
-    public class Reading
+    public record Reading
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid ReadingId { get; set; }
+        public Guid ReadingId { get; init; }
 
         [Column(TypeName = "decimal(18,4)")]
 
-        public decimal Value { get; set; }
+        public decimal Value { get; init; }
 
-        public int Scale { get; set; }
+        public int Scale { get; init; }
 
-        public DateTime Taken { get; set; }
+        public DateTime Taken { get; init; }
     }
 
-    public class ReadingRequest
+    public record ReadingRequest
     {
-        public decimal Value { get; set; }
-        public int Scale { get; set; }
-        public DateTime? Taken { get; set; }
+        public decimal Value { get; init; }
+        public int Scale { get; init; }
+        public DateTime? Taken { get; init; }
     }
 
     public enum Scales { F, C }

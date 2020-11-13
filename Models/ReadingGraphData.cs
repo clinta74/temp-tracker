@@ -2,9 +2,9 @@ using System;
 
 namespace temp_tracker.Models
 {
-    public class ReadingGraphData
+    public record ReadingGraphData
     {
-        public decimal Value { get; set; }
-        public DateTime Taken { get; set; }
+        public decimal Value { get; init; }
+        public DateTime Taken { get; init; }
     }
 }
