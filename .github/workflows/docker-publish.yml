@@ -30,6 +30,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          tags: latest
 
       - name: Update repo description
         uses: peter-evans/dockerhub-description@v2
