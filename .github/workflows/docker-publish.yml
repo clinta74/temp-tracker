@@ -29,7 +29,11 @@ jobs:
       - name: Publish Image
         uses: docker/build-push-action@v2
         with:
+          push: true
+          tags: temp-tracker@latest
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_KEY }}
-          tags: candrews74/temp-tracker@latest
-          tag_with_ref: true
+          repository: candrews74/temp-tracker
