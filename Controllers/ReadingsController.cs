@@ -124,9 +124,7 @@ namespace temp_tracker.Controllers
                 .Select(g => new ReadingGraphData { Value = g.Average(p => p.Value), Taken = g.Key })
                 .ToListAsync(cancellationToken);
 
-            var filtered = data.Where(d => d.Taken.DayOfWeek < DayOfWeek.Friday).ToList();
-
-            return filtered;
+            return data;
         }
     }
 }
